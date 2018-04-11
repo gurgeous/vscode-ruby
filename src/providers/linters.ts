@@ -3,6 +3,7 @@ import { ExtensionContext } from 'vscode';
 import * as debounce from 'lodash/debounce';
 
 import { LintCollection } from '../lint/lintCollection';
+import { Lint2 } from '../lint2/Lint2';
 import { Config as LintConfig } from '../lint/lintConfig';
 
 function getGlobalLintConfig() : LintConfig {
@@ -26,6 +27,8 @@ function getGlobalLintConfig() : LintConfig {
 }
 
 export function registerLinters(ctx: ExtensionContext) {
+	new Lint2(ctx);
+
 	const globalConfig = getGlobalLintConfig();
 	const linters = new LintCollection(globalConfig, vscode.workspace.getConfiguration("ruby").lint, vscode.workspace.rootPath);
 	ctx.subscriptions.push(linters);

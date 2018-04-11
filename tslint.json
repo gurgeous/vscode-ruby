@@ -6,7 +6,13 @@
 		"missing-jsdoc": false,
 		"no-backbone-get-outside-model": false,
 		"no-backbone-get-set-outside-model": false,
-		"no-relative-imports": false
+		"no-relative-imports": false,
+
+		// added by gurgeous
+		"interface-name": false,
+		"newline-before-return": false,
+		"no-any": false,
+		"no-console": false
 	},
 	"rulesDirectory": []
 }
