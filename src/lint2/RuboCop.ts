@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Settings } from '../Settings';
 import * as execFile from './execFile';
-import { LintCommand } from './LintCommand';
+import { Linter } from './Linter';
 
 const SEVERITIES: { [key: string]: vscode.DiagnosticSeverity } = {
 	refactor: vscode.DiagnosticSeverity.Hint,
@@ -14,7 +14,11 @@ const SEVERITIES: { [key: string]: vscode.DiagnosticSeverity } = {
 	fatal: vscode.DiagnosticSeverity.Error,
 };
 
-export class RuboCop extends LintCommand {
+//
+// The RuboCop linter.
+//
+
+export class RuboCop extends Linter {
 	public constructor(settings: Settings) {
 		super('rubocop', settings);
 	}
@@ -26,17 +30,17 @@ export class RuboCop extends LintCommand {
 		args = ['-s', '${path}', '-f', 'json'];
 
 		// calculate args
-		if (this.commandSettings.forceExclusion) {
+		if (this.settings.forceExclusion) {
 			args.push('--force-exclusion');
 		}
-		if (this.commandSettings.lint) {
+		if (this.settings.lint) {
 			args.push('-l');
 		}
-		if (this.commandSettings.rails) {
+		if (this.settings.rails) {
 			args.push('-R');
 		}
 		for (const key of ['only', 'except', 'require']) {
-			const value: string[] = this.commandSettings[key];
+			const value: string[] = this.settings[key];
 			if (value) {
 				args = args.concat(`--${key}`, value.join(','));
 			}
@@ -45,7 +49,7 @@ export class RuboCop extends LintCommand {
 		return args;
 	}
 
-	public parseToDiagnostics(output: execFile.Results): vscode.Diagnostic[] {
+	public parseToDiagnostics(output: execFile.Output): vscode.Diagnostic[] {
 		const error: any = output.error;
 
 		// https://github.com/bbatsov/rubocop/blob/master/manual/basic_usage.md#exit-codes
@@ -67,15 +71,16 @@ export class RuboCop extends LintCommand {
 
 		const offenses: any[] = json.files[0].offenses;
 		return offenses.map((o: any): vscode.Diagnostic => {
-			// range, need these offsets to be zero-based
+			// range. Note that offsets are zero-based
 			const loc: any = o.location;
-			const line: number = o.location.line - 1;
-			const startCharacter: number = o.location.column - 1;
-			const endCharacter: number = startCharacter + o.location.length;
+			const line: number = loc.line - 1;
+			const startCharacter: number = loc.column - 1;
+			const endCharacter: number = startCharacter + loc.length;
 			const range: vscode.Range = new vscode.Range(line, startCharacter, line, endCharacter);
 
 			// sev
-			const severity: vscode.DiagnosticSeverity = SEVERITIES[o.severity] || vscode.DiagnosticSeverity.Error
+			const severity: vscode.DiagnosticSeverity =
+				SEVERITIES[o.severity] || vscode.DiagnosticSeverity.Error;
 
 			const diagnostic: vscode.Diagnostic = new vscode.Diagnostic(range, o.message, severity);
 			diagnostic.source = o.cop_name;
