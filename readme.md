@@ -57,14 +57,11 @@ You need use Ruby `2.0` or above and you need to update `debase` to latest beta 
 
 ## Linters
 ### Available Linter hooks
-You will need to install the ruby gem for each of these for linting to work (except ruby -wc of course)
+You will need to install the ruby gem for each of these for linting to work
 
-* ruby -wc
 * rubocop
-* ruby-lint
 * reek
 * fasterer
-* debride
 
 
 Enable each one in your workspace or user settings:
@@ -74,10 +71,7 @@ Enable each one in your workspace or user settings:
 "ruby.lint": {
 	"reek": true,
 	"rubocop": true,
-	"ruby": true, //Runs ruby -wc
 	"fasterer": true,
-	"debride": true,
-	"ruby-lint": true
 },
 
 // Time (ms) to wait after keypress before running enabled linters. Ensures
@@ -103,28 +97,15 @@ By default no linters are turned on.
 Each linter runs only on the newly opened or edited file. This excludes some of the linters functionality, and makes some overly chatty - such as ruby-lint reporting undefined methods. The usual configuration file for each linter will be use as they would be when running from the command line, however settings that include/exclude files will not likely be followed.
 
 Relevant configuration files:
-* debride: _none_
-* ruby: _none_
 * reek: [*.reek](https://github.com/troessner/reek)
 * fasterer: [.fasterer.yml](https://github.com/DamirSvrtan/fasterer)
-* ruby-lint: [ruby-lint.yml](https://github.com/YorickPeterse/ruby-lint/blob/master/doc/configuration.md)
 * rubocop: [.rubocop.yml](http://rubocop.readthedocs.io/en/latest/configuration/)
 
 Settings available (in your VSCode workspace) for each of the linters:
 
 ```javascript
-"debride": {
-	"rails": true //Add some rails call conversions.
-}
-
-"ruby"//no settings
 "reek" //no settings
 "fasterer" //no settings
-
-"ruby-lint": {
-	"levels": [/* a subset of these */ "error","warning","info"],
-	"classes":[ /* a subset of these */ "argument_amount", "loop_keywords", "pedantics", "shadowing_variables", "undefined_methods", "undefined_variables", "unused_variables", "useless_equality_checks" ]
-}
 
 "rubocop": {
 	"lint": true, //enable all lint cops.

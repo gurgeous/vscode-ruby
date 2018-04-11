@@ -2,16 +2,16 @@
 
 const Linter = require('./lib/linter');
 const LintResults = require('./lib/lintResults');
-import { Config } from './lintConfig';
+import { LintConfig } from './LintConfig';
 
 export class LintCollection {
 	private _results: any;
 	private _docLinters: any;
-	private _cfg: { [key: string]: Config };
+	private _cfg: { [key: string]: LintConfig };
 	private _rootPath: string;
-	private _globalConfig: Config;
+	private _globalConfig: LintConfig;
 
-	constructor(globalConfig : Config, lintConfig : { [key: string]: Config }, rootPath) {
+	constructor(globalConfig : LintConfig, lintConfig : { [key: string]: LintConfig }, rootPath) {
 		this._results = {};
 		this._docLinters = {};
 		this._globalConfig = globalConfig;
@@ -44,7 +44,7 @@ export class LintCollection {
 			}
 			delete this._cfg[l];
 		});
-		// we change the config internally, so that the config of any (awaiting) linters will be updated by reference
+		// we change the LintConfig internally, so that the LintConfig of any (awaiting) linters will be updated by reference
 		for (let l in newConfig) {
 			if (newConfig[l]) this._cfg[l] = Object.assign({}, newConfig[l], globalConfig);
 		}
