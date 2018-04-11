@@ -47,12 +47,10 @@
   },
   "dependencies": {
     "async": "^2.3.0",
+    "fs-extra": "^5.0.0",
     "lodash": "^4.17.3",
     "minimatch": "^3.0.3",
     "ruby-method-locate": "*",
-    "vscode": "^1.1.4",
-    "vscode-debugadapter": "^1.19.0",
-    "vscode-debugprotocol": "^1.19.0",
     "xmldom": "^0.1.19"
   },
   "devDependencies": {
@@ -70,8 +68,10 @@
     "tslint-config-prettier": "^1.10.0",
     "tslint-microsoft-contrib": "^5.0.3",
     "typescript": "^2.1.5",
-    "vscode": "^1.1.4",
-    "vscode-debugadapter-testsupport": "^1.19.0"
+    "vscode-debugadapter-testsupport": "^1.19.0",
+    "vscode-debugadapter": "^1.19.0",
+    "vscode-debugprotocol": "^1.19.0",
+    "vscode": "^1.1.4"
   },
   "scripts": {
     "vscode:prepublish": "tsc -p ./src",
@@ -136,14 +136,26 @@
           "isExecutable": true
         },
         "ruby.codeCompletion": {
-          "type": ["boolean", "string"],
-          "enum": [false, "rcodetools"],
+          "type": [
+            "boolean",
+            "string"
+          ],
+          "enum": [
+            false,
+            "rcodetools"
+          ],
           "default": false,
           "description": "Method to use for code completion. Use `false` to disable or if another extension provides this feature."
         },
         "ruby.intellisense": {
-          "type": ["boolean", "string"],
-          "enum": [false, "rubyLocate"],
+          "type": [
+            "boolean",
+            "string"
+          ],
+          "enum": [
+            false,
+            "rubyLocate"
+          ],
           "default": false,
           "description": "Method to use for intellisense (go to definition, etc.). Use `false` to disable or if another extension provides this feature."
         },
@@ -288,8 +300,14 @@
           }
         },
         "ruby.format": {
-          "type": [ "boolean", "string" ],
-          "enum": [ false, "rubocop" ],
+          "type": [
+            "boolean",
+            "string"
+          ],
+          "enum": [
+            false,
+            "rubocop"
+          ],
           "default": false,
           "description": "Which system to use for formatting. Use `false` to disable or if another extension provides this feature."
         }

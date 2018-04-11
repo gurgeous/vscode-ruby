@@ -1,0 +1,24 @@
+{
+	"env": {
+		"browser": false,
+		"commonjs": true,
+		"es6": true,
+		"node": true
+	},
+	"parserOptions": {
+		"ecmaFeatures": {
+			"jsx": true
+		},
+		"sourceType": "module"
+	},
+	"rules": {
+		"no-const-assign": "error",
+		"no-this-before-super": "error",
+		"no-undef": "error",
+		"no-unreachable": "error",
+		"no-unused-vars": "error",
+		"constructor-super": "error",
+		"prefer-const": "error",
+		"valid-typeof": "error"
+	}
+}
