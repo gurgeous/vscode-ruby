@@ -10,7 +10,7 @@ import { LintCommand } from './LintCommand';
 // Helper for executing a lint process.
 //
 
-class LintCommandRunner {
+export class LintCommandRunner {
 	private readonly command: LintCommand;
 	private readonly document: vscode.TextDocument;
 

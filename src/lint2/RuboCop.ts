@@ -2,7 +2,17 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Settings } from '../Settings';
-import { LintCommand, Offense } from './LintCommand';
+import * as execFile from './execFile';
+import { LintCommand } from './LintCommand';
+
+const SEVERITIES: { [key: string]: vscode.DiagnosticSeverity } = {
+	refactor: vscode.DiagnosticSeverity.Hint,
+	convention: vscode.DiagnosticSeverity.Information,
+	info: vscode.DiagnosticSeverity.Information,
+	warning: vscode.DiagnosticSeverity.Warning,
+	error: vscode.DiagnosticSeverity.Error,
+	fatal: vscode.DiagnosticSeverity.Error,
+};
 
 export class RuboCop extends LintCommand {
 	public constructor(settings: Settings) {
@@ -35,33 +45,41 @@ export class RuboCop extends LintCommand {
 		return args;
 	}
 
-	public parseOutputToOffenses(output: string): Offense[] {
-		if (output === '') {
+	public parseToDiagnostics(output: execFile.Results): vscode.Diagnostic[] {
+		const error: any = output.error;
+
+		// https://github.com/bbatsov/rubocop/blob/master/manual/basic_usage.md#exit-codes
+		if (error && error.code !== 1) {
+			// REMIND: fail loudly
+			throw error;
+		}
+
+		const stdout: string = output.stdout;
+		if (stdout === '') {
 			return [];
 		}
 
 		// sanity
-		const json: any = JSON.parse(output);
+		const json: any = JSON.parse(stdout);
 		if (!(json && json.files && json.files[0] && json.files[0].offenses)) {
 			return [];
 		}
 
 		const offenses: any[] = json.files[0].offenses;
-		return offenses.map((o: any): Offense => {
+		return offenses.map((o: any): vscode.Diagnostic => {
+			// range, need these offsets to be zero-based
 			const loc: any = o.location;
-
-			// need these offsets to be zero-based
 			const line: number = o.location.line - 1;
 			const startCharacter: number = o.location.column - 1;
 			const endCharacter: number = startCharacter + o.location.length;
 			const range: vscode.Range = new vscode.Range(line, startCharacter, line, endCharacter);
 
-			return {
-				range,
-				message: o.message,
-				severity: o.severity,
-				source: o.cop_name,
-			};
+			// sev
+			const severity: vscode.DiagnosticSeverity = SEVERITIES[o.severity] || vscode.DiagnosticSeverity.Error
+
+			const diagnostic: vscode.Diagnostic = new vscode.Diagnostic(range, o.message, severity);
+			diagnostic.source = o.cop_name;
+			return diagnostic;
 		});
 	}
 }

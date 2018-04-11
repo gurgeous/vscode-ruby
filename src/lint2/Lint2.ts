@@ -19,8 +19,6 @@ export class Lint2 {
 	public constructor(context: vscode.ExtensionContext) {
 		this.settings = <Settings>vscode.workspace.getConfiguration('ruby');
 		this.debouncedLint = _.debounce(this.lintDocument, this.settings.lintDebounceTime);
-
-		// setup linting commands
 		this.commands = [ new RuboCop(this.settings) ];
 
 		// register for vscode events
@@ -74,7 +72,7 @@ export class Lint2 {
 		this.debouncedLint(changeEvent.document);
 	};
 
-	private onDidChangeConfiguration = () => {
+	private onDidChangeConfiguration = (): void => {
 		// REMIND: apply new settings, then lint
 		console.log('onDidChangeConfiguration');
 	};

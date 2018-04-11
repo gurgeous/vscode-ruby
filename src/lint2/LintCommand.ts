@@ -2,6 +2,8 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Settings } from '../Settings';
+import * as execFile from './execFile';
+import { LintCommandRunner } from './LintCommandRunner';
 
 interface LintCommandSettings {
 	pathToRuby: string;
@@ -10,12 +12,11 @@ interface LintCommandSettings {
 	[key: string]: any;
 }
 
-export interface Offense {
-	range: vscode.Range,
-	message: string;
-	severity?: string;
-	source?: string;
-}
+const DEFAULTS: LintCommandSettings = {
+	pathToRuby: 'ruby',
+	pathToBundler: 'bundle',
+	useBundler: false,
+};
 
 //
 // Abstract superclass for our different linters. Contains the
@@ -26,9 +27,11 @@ export interface Offense {
 export abstract class LintCommand {
 	public readonly exe: string;
 	public commandSettings: LintCommandSettings;
+	private diagnostics: vscode.DiagnosticCollection;
 
 	public constructor(exe: string, settings: Settings) {
 		this.exe = exe;
+		this.diagnostics = vscode.languages.createDiagnosticCollection(exe);
 		this.reload(settings);
 	}
 
@@ -38,11 +41,6 @@ export abstract class LintCommand {
 		const levels: LintCommandSettings[] = [];
 
 		// defaults
-		const DEFAULTS: LintCommandSettings = {
-			pathToRuby: 'ruby',
-			pathToBundler: 'bundle',
-			useBundler: false,
-		};
 		levels.push(DEFAULTS);
 
 		// global settings
@@ -78,16 +76,34 @@ export abstract class LintCommand {
 		this.commandSettings = Object.assign({}, ...withoutUndefined);
 	}
 
-	public run(doc: vscode.TextDocument): void {
-		// REMIND: move outside this class?
-		if (!doc || doc.languageId !== 'ruby') {
+	public async run(document: vscode.TextDocument): Promise<void> {
+		// run command
+		const runner: LintCommandRunner = new LintCommandRunner(this, document);
+		let output: execFile.Results;
+		try {
+			output = await runner.run();
+		} catch (e) {
+			const msg: string = `vscode-ruby failed to lint '${e}'`;
+			vscode.window.showErrorMessage(msg);
+			console.error(msg);
 			return;
 		}
 
-		// let's try the non-temp case first
-		// if (!this.temp) {
-			// gub
-		// }
+		// parse
+		let diagnostics: vscode.Diagnostic[];
+		try {
+			diagnostics = this.parseToDiagnostics(output);
+			console.log(diagnostics);
+		} catch (e) {
+			const msg: string = `vscode-ruby failed to parse '${e}'`;
+			vscode.window.showErrorMessage(msg);
+			console.error(msg);
+			return;
+		}
+
+		// now add diagnostics
+		// REMIND: clear this first in case of errors?
+		this.diagnostics.set(document.uri, diagnostics);
 	}
 
 	//
@@ -112,27 +128,25 @@ export abstract class LintCommand {
 		return undefined;
 	}
 
-	public abstract parseOutputToOffenses(output: string): Offense[];
+	public abstract parseToDiagnostics(output: execFile.Results): vscode.Diagnostic[];
 }
 
-	// update pend/active
+// update pend/active
 
-	// if temp
-	//   create temp dir
-	//   copy settings
-	//   run linter + process results + updateForFile (add diag)
-	//   cleanup
-	// else
-	//   run linter + process results + updateForFile (add diag)
-	//
-	// update active
-	// honor pend
-	//
-	// updateForFile
+// if temp
+//   create temp dir
+//   copy settings
+//   run linter + process results + updateForFile (add diag)
+//   cleanup
+// else
+//   run linter + process results + updateForFile (add diag)
+//
+// update active
+// honor pend
+//
+// updateForFile
 
-	// are we enabled? if not, delete
-
-
+// are we enabled? if not, delete
 
 // function RuboCop(opts) {
 // 	this.exe = "rubocop";
