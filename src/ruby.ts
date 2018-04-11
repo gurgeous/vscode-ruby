@@ -8,7 +8,7 @@ import { registerCompletionProvider } from './providers/completion';
 import { registerFormatter } from './providers/formatter';
 import { registerHighlightProvider } from './providers/highlight';
 import { registerIntellisenseProvider } from './providers/intellisense';
-import { registerLinters } from './providers/linters';
+import { registerLinters } from './providers/registerLinters';
 import { registerTaskProvider } from './task/rake';
 
 export function activate(context: ExtensionContext) {

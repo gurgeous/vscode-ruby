@@ -54,6 +54,7 @@
     "xmldom": "^0.1.19"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.106",
     "@types/mocha": "^2.2.33",
     "@types/node": "^6.0.50",
     "cson-parser": "^2.0.1",
@@ -68,10 +69,10 @@
     "tslint-config-prettier": "^1.10.0",
     "tslint-microsoft-contrib": "^5.0.3",
     "typescript": "^2.1.5",
-    "vscode-debugadapter-testsupport": "^1.19.0",
+    "vscode": "^1.1.4",
     "vscode-debugadapter": "^1.19.0",
-    "vscode-debugprotocol": "^1.19.0",
-    "vscode": "^1.1.4"
+    "vscode-debugadapter-testsupport": "^1.19.0",
+    "vscode-debugprotocol": "^1.19.0"
   },
   "scripts": {
     "vscode:prepublish": "tsc -p ./src",
