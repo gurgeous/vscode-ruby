@@ -8,7 +8,10 @@ import { RuboCop } from './RuboCop';
 // keep: fasterer (needs temp file), reek, rubocop
 
 //
-// Linting support
+// Linting support. This class contains a list of external command line linters
+// which are enabled/disabled on demand depending on user settings. Each Linter
+// object wraps one an external linter, and can use that linter to generate
+// Diagnostics.
 //
 
 export class Linting {

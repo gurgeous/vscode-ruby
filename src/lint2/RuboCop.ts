@@ -5,6 +5,10 @@ import { Settings } from '../Settings';
 import * as execFile from './execFile';
 import { Linter } from './Linter';
 
+//
+// The RuboCop linter.
+//
+
 const SEVERITIES: { [key: string]: vscode.DiagnosticSeverity } = {
 	refactor: vscode.DiagnosticSeverity.Hint,
 	convention: vscode.DiagnosticSeverity.Information,
@@ -13,10 +17,6 @@ const SEVERITIES: { [key: string]: vscode.DiagnosticSeverity } = {
 	error: vscode.DiagnosticSeverity.Error,
 	fatal: vscode.DiagnosticSeverity.Error,
 };
-
-//
-// The RuboCop linter.
-//
 
 export class RuboCop extends Linter {
 	public constructor(settings: Settings) {

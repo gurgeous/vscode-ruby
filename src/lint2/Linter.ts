@@ -5,6 +5,11 @@ import { Settings } from '../Settings';
 import * as args from './args';
 import * as execFile from './execFile';
 
+//
+// Abstract superclass for our various linters. Each linter runs on a document
+// (or subset) and converts the linter output to Diagnostics.
+//
+
 // these settings can be set globally or per-linter
 interface LinterSettings {
 	pathToRuby: string;
@@ -19,11 +24,6 @@ const DEFAULTS: LinterSettings = {
 	pathToBundler: 'bundle',
 	useBundler: false,
 };
-
-//
-// Abstract superclass for our various linters. Each linter runs on a document
-// (or text) and converts the linter output to Diagnostics.
-//
 
 export abstract class Linter {
 	public readonly exe: string;

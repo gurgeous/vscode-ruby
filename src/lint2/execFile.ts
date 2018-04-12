@@ -1,5 +1,11 @@
 import * as cp from 'child_process';
 
+//
+// Promise wapper around cp.execFile. This is strucuted to take a single Args
+// object as input and returns a single Output object with the results. This
+// makes it a bit easier for callers to use execFile.
+//
+
 // input
 export interface Args {
 	command: string;
@@ -15,7 +21,6 @@ export interface Output {
 	error?: Error;
 }
 
-// Promise wapper around cp.execFile.
 export function execFile(args: Args): Promise<Output> {
 	return new Promise((resolve: any, reject: any): void => {
 		const child: cp.ChildProcess = cp.execFile(

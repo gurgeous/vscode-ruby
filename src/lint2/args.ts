@@ -5,7 +5,9 @@ import { Args } from './execFile';
 import { Linter } from './Linter';
 
 //
-// Assemble linting command line arguments for a document.
+// Assemble linting command line arguments for a document. Given a Linter and a
+// document, returns an execFile.args suitable for running the linter on the
+// command line.
 //
 
 export function forDocument(linter: Linter, document: vscode.TextDocument): Args {
