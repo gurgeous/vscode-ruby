@@ -5,6 +5,7 @@ import { Settings } from '../Settings';
 import { Linter } from './Linter';
 
 import { Fasterer } from './Fasterer';
+import { Reek } from './Reek';
 import { RuboCop } from './RuboCop';
 
 // keep: reek
@@ -26,7 +27,8 @@ export class Linting {
 		this.debouncedLint = _.debounce(this.lintDocument, this.settings.lintDebounceTime);
 		this.linters = [
 			// new RuboCop(this.settings),
-			new Fasterer(this.settings)
+			// new Fasterer(this.settings),
+			new Reek(this.settings),
 		];
 
 		// register for vscode events
