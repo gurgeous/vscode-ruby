@@ -1,4 +1,6 @@
+import * as fs from 'fs-extra';
 import * as _ from 'lodash';
+import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Settings } from '../Settings';
@@ -79,33 +81,47 @@ export abstract class Linter {
 	}
 
 	public async run(document: vscode.TextDocument): Promise<void> {
-		let output: execFile.Output;
-		try {
-			// get arguments
-			const ea: execFile.Args = args.forDocument(this, document);
-			// run child process
-			output = await execFile.execFile(ea);
-		} catch (e) {
-			const msg: string = `vscode-ruby failed to lint '${e}'`;
-			vscode.window.showErrorMessage(msg);
-			console.error(msg);
-			return;
+		//
+		// create context
+		//
+
+		const context: args.Context = {
+			fileName: document.fileName,
+			cwd: path.dirname(document.fileName),
+			data: document.getText(),
+		};
+
+		//
+		// tmp? adjust context if necessary
+		//
+
+		if (this.runInTmpDirectory) {
+			// make dir
+			const tmpDir: string = path.join(os.tmpdir(), 'vscode_ruby_lint');
+			const tmpFile: string = path.join(tmpDir, 'lint.rb');
+
+			// prepare tmp dir
+			await fs.emptyDir(tmpDir);
+			await fs.writeFile(tmpFile, context.data);
+			await this.linkSettings(context.cwd, tmpDir);
+
+			// and now update context
+			context.fileName = path.basename(tmpFile);
+			context.cwd = tmpDir;
 		}
+
+		//
+		// run
+		//
+
+		// get arguments, run
+		const ea: execFile.Args = args.forContext(this, context);
+		const output: execFile.Output = await execFile.execFile(ea);
 
 		// parse
-		let diagnostics: vscode.Diagnostic[];
-		try {
-			diagnostics = this.parseToDiagnostics(output);
-			console.log(diagnostics);
-		} catch (e) {
-			const msg: string = `vscode-ruby failed to parse '${e}'`;
-			vscode.window.showErrorMessage(msg);
-			console.error(msg);
-			return;
-		}
-
-		// now add diagnostics
 		// REMIND: clear this first in case of errors?
+		const diagnostics: vscode.Diagnostic[] = this.parseToDiagnostics(output);
+		console.log(diagnostics);
 		this.diagnostics.set(document.uri, diagnostics);
 	}
 
@@ -121,15 +137,75 @@ export abstract class Linter {
 		return this.settings.path;
 	}
 
-	public get runInTempDirectory(): boolean {
+	public get runInTmpDirectory(): boolean {
 		return false;
 	}
 
 	// What is the name of this linter's settings file? We may have to copy this
-	// into our temp directory when needsTempDirectory is used.
+	// into our tmp directory when runInTmpDirectory is used.
 	public get settingsFile(): string | undefined {
 		return undefined;
 	}
 
 	public abstract parseToDiagnostics(output: execFile.Output): vscode.Diagnostic[];
+
+	//
+	// helpers
+	//
+
+	// is file readable?
+	private async isReadable(file: string): Promise<boolean> {
+		try {
+			await fs.access(file, fs.constants.R_OK);
+		} catch (e) {
+			return false;
+		}
+		return true;
+	}
+
+	// look in dir (and above) for a file
+	private async lookUpward(srcDir: string, file: string): Promise<string | undefined> {
+		let dir: string = srcDir;
+
+		// tslint:disable-next-line no-constant-condition
+		while (true) {
+			const checkFile: string = path.join(dir, file);
+			if (await this.isReadable(checkFile)) {
+				// success!
+				return checkFile;
+			}
+			const parentDir: string = path.dirname(dir);
+			if (parentDir === dir) {
+				// failure
+				return undefined;
+			}
+			dir = parentDir;
+		}
+	}
+
+	// copy settings into tmp dir
+	private async linkSettings(srcDir: string, dstDir: string): Promise<void> {
+		const settingsFile: string | undefined = this.settingsFile;
+		if (!this.settingsFile) {
+			return;
+		}
+
+		let srcFile: string | undefined;
+
+		// look upward, then try HOME
+		srcFile = await this.lookUpward(srcDir, settingsFile);
+		if (!srcFile) {
+			const checkFile: string = path.join(process.env.HOME, settingsFile);
+			if (await this.isReadable(checkFile)) {
+				srcFile = checkFile;
+			}
+		}
+		if (!srcFile) {
+			return;
+		}
+
+		// got it! link
+		const dstFile: string = path.join(dstDir, settingsFile);
+		await fs.link(srcFile, dstFile);
+	}
 }

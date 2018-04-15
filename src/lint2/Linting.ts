@@ -3,9 +3,11 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Settings } from '../Settings';
 import { Linter } from './Linter';
+
+import { Fasterer } from './Fasterer';
 import { RuboCop } from './RuboCop';
 
-// keep: fasterer (needs temp file), reek, rubocop
+// keep: reek
 
 //
 // Linting support. This class contains a list of external command line linters
@@ -22,7 +24,10 @@ export class Linting {
 	public constructor(context: vscode.ExtensionContext) {
 		this.settings = <Settings>vscode.workspace.getConfiguration('ruby');
 		this.debouncedLint = _.debounce(this.lintDocument, this.settings.lintDebounceTime);
-		this.linters = [new RuboCop(this.settings)];
+		this.linters = [
+			// new RuboCop(this.settings),
+			new Fasterer(this.settings)
+		];
 
 		// register for vscode events
 		this.register(context);
@@ -57,7 +62,15 @@ export class Linting {
 		if (!document || document.languageId !== 'ruby') {
 			return;
 		}
-		this.linters.forEach((linter: Linter) => linter.run(document));
+		this.linters.forEach((linter: Linter) => {
+			try {
+				linter.run(document)
+			} catch (e) {
+				const msg: string = `vscode-ruby failed to lint ${document.fileName} '${e}'`;
+				vscode.window.showErrorMessage(msg);
+				console.error(msg);
+			}
+		});
 	};
 
 	//

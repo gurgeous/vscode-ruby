@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "async": "^2.3.0",
+    "fs-extra": "^5.0.0",
     "lodash": "^4.17.3",
     "minimatch": "^3.0.3",
     "ruby-method-locate": "*",
@@ -56,6 +57,7 @@
     "xmldom": "^0.1.19"
   },
   "devDependencies": {
+    "@types/fs-extra": "^5.0.2",
     "@types/mocha": "^2.2.33",
     "@types/node": "^6.0.50",
     "cson-parser": "^2.0.1",

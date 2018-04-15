@@ -4,13 +4,19 @@ import * as vscode from 'vscode';
 import { Args } from './execFile';
 import { Linter } from './Linter';
 
+export interface Context {
+	fileName: string;
+	cwd: string;
+	data: string;
+};
+
 //
 // Assemble linting command line arguments for a document. Given a Linter and a
 // document, returns an execFile.args suitable for running the linter on the
 // command line.
 //
 
-export function forDocument(linter: Linter, document: vscode.TextDocument): Args {
+export function forContext(linter: Linter, context: Context): Args {
 	//
 	// Finalize args
 	//
@@ -29,24 +35,16 @@ export function forDocument(linter: Linter, document: vscode.TextDocument): Args
 	// Replace variables
 	//
 
-	const fileName: string = document.fileName || 'unknown.rb';
 	// tslint:disable-next-line no-invalid-template-strings
 	command = command.replace('${workspaceRoot}', vscode.workspace.rootPath);
 	// tslint:disable-next-line no-invalid-template-strings
-	args = args.map((arg: string) => arg.replace('${path}', fileName));
+	args = args.map((arg: string) => arg.replace('${path}', context.fileName));
 
 	// options
-	const cwd: string = document.fileName
-		? path.dirname(document.fileName)
-		: vscode.workspace.rootPath;
-	const options: cp.ExecFileOptions = { cwd, env: process.env };
+	const options: cp.ExecFileOptions = { cwd: context.cwd, env: process.env };
 
 	// stdin
-	const stdin: string = document.getText();
+	const stdin: string = context.data;
 
 	return { command, args, options, stdin };
-}
-
-export function forData(linter: Linter, data: string): void {
-	// REMIND
 }
