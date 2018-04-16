@@ -16,28 +16,32 @@ import { RuboCop } from './RuboCop';
 //
 
 export class Linting {
+	// complete "ruby" settings
 	private settings: Settings;
-	private debouncedLint: (document: vscode.TextDocument) => void;
+	// list of linters (rubocop, fasterer, reek)
 	private linters: Linter[];
+	// keep track of which documents are currently being linted
+	private running: Map<vscode.Uri, boolean>;
+	// don't lint too often
+	private debouncedLint: (document: vscode.TextDocument) => void;
+	// collection of diagnostics (linting offenses)
 	private diagnosticsCollection: vscode.DiagnosticCollection;
 
 	public constructor(context: vscode.ExtensionContext) {
 		this.settings = <Settings>vscode.workspace.getConfiguration('ruby');
-		this.debouncedLint = _.debounce(this.lintDocument, this.settings.lintDebounceTime);
 		this.linters = [
 			new RuboCop(this.settings),
 			new Fasterer(this.settings),
 			new Reek(this.settings),
 		];
+		this.running = new Map<vscode.Uri, boolean>();
+		this.debouncedLint = _.debounce(this.lintDocument, this.settings.lintDebounceTime);
 		this.diagnosticsCollection = vscode.languages.createDiagnosticCollection('ruby');
 
 		// register for vscode events
 		this.register(context);
-
 		// lint now
-		vscode.window.visibleTextEditors.forEach((i: vscode.TextEditor) => {
-			this.lintDocument(i.document);
-		});
+		this.lintAllEditors();
 
 		context.subscriptions.push(this);
 	}
@@ -59,18 +63,29 @@ export class Linting {
 		// REMIND
 	}
 
-	// lint a document
+	// Walk editors, lint docs.
+	private lintAllEditors(): void {
+		vscode.window.visibleTextEditors.forEach((textEditor: vscode.TextEditor) => {
+			this.lintDocument(textEditor.document);
+		});
+	}
+
+	// Lint a single document.
 	private lintDocument = async (document: vscode.TextDocument): Promise<void> => {
 		if (!document || document.languageId !== 'ruby') {
 			return;
 		}
 
-		// run linters
-		const promises: any[] = this.linters.map((linter: Linter) => {
-			return linter.run(document);
-		});
+		if (this.running.get(document.uri)) {
+			return;
+		}
+		this.running.set(document.uri, true);
 
-		// wait for them to complete
+		// Run linters (collect promises) and wait for them to complete. Note that
+		// there is an edge case if multiple linters are enabled and one of them
+		// throws an error. Promise.all doesn't wait for all promises to complete if
+		// one of them throws an error.
+		const promises: any[] = this.linters.map((l: Linter) => l.run(document));
 		try {
 			const perLinter: vscode.Diagnostic[][] = await Promise.all(promises);
 			const diagnostics: vscode.Diagnostic[] = [].concat.apply([], perLinter);
@@ -82,6 +97,8 @@ export class Linting {
 			vscode.window.showErrorMessage(msg);
 			console.error(e);
 		}
+
+		this.running.set(document.uri, false);
 	};
 
 	//
@@ -102,5 +119,6 @@ export class Linting {
 	private onDidChangeConfiguration = (): void => {
 		this.settings = <Settings>vscode.workspace.getConfiguration('ruby');
 		this.linters.forEach((linter: Linter) => linter.reload(this.settings));
+		this.lintAllEditors();
 	};
 }
