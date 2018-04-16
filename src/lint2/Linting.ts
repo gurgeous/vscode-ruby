@@ -58,6 +58,9 @@ export class Linting {
 			vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument)
 		);
 		context.subscriptions.push(
+			vscode.workspace.onDidCloseTextDocument(this.onDidCloseTextDocument)
+		);
+		context.subscriptions.push(
 			vscode.workspace.onDidChangeConfiguration(this.onDidChangeConfiguration)
 		);
 	}
@@ -129,6 +132,10 @@ export class Linting {
 
 	private onDidChangeTextDocument = (changeEvent: vscode.TextDocumentChangeEvent): void => {
 		this.debouncedLint(changeEvent.document);
+	};
+
+	private onDidCloseTextDocument = (document: vscode.TextDocument): void => {
+		this.diagnosticsCollection.delete(document.uri);
 	};
 
 	private onDidChangeConfiguration = (): void => {
