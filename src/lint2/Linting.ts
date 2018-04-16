@@ -58,6 +58,9 @@ export class Linting {
 			vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument)
 		);
 		context.subscriptions.push(
+			vscode.workspace.onDidSaveTextDocument(this.onDidSaveTextDocument)
+		);
+		context.subscriptions.push(
 			vscode.workspace.onDidCloseTextDocument(this.onDidCloseTextDocument)
 		);
 		context.subscriptions.push(
@@ -131,7 +134,15 @@ export class Linting {
 	};
 
 	private onDidChangeTextDocument = (changeEvent: vscode.TextDocumentChangeEvent): void => {
-		this.debouncedLint(changeEvent.document);
+		if (this.settings.lintRun === 'onType') {
+			this.debouncedLint(changeEvent.document);
+		}
+	};
+
+	private onDidSaveTextDocument = (document: vscode.TextDocument): void => {
+		if (this.settings.lintRun === 'onSave') {
+			this.lintDocument(document);
+		}
 	};
 
 	private onDidCloseTextDocument = (document: vscode.TextDocument): void => {

@@ -66,6 +66,11 @@ export interface Settings {
 	lintDebounceTime?: number;
 
 	/**
+	 * Run the linter on save (onSave) or on type (onType).
+	 */
+	lintRun: 'onSave' | 'onType';
+
+	/**
 	 * Set individual ruby linters to use
 	 */
 	lint?: {
