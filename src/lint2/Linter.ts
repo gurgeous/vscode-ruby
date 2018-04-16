@@ -28,6 +28,16 @@ const DEFAULTS: LinterSettings = {
 	useBundler: false,
 };
 
+export class LintError extends Error {
+	public output: util.ExecFileOutput;
+
+	constructor(message: string, output: util.ExecFileOutput) {
+		super(message);
+		this.output = output;
+		Error.captureStackTrace(this, LintError);
+	}
+}
+
 export abstract class Linter {
 	public readonly exe: string;
 	public settings: LinterSettings;

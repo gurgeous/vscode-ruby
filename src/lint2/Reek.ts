@@ -2,7 +2,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Settings } from '../Settings';
-import { Linter } from './Linter';
+import { Linter, LintError } from './Linter';
 import * as util from './util';
 
 //
@@ -25,10 +25,7 @@ export class Reek extends Linter {
 
 		const error: any = output.error;
 		if (error && error.code !== 2) {
-			console.log("unknown reek error");
-			console.log(output.stdout);
-			console.log(output.stderr);
-			throw error;
+			throw new LintError("unknown reek error", output);
 		}
 
 		//

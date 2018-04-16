@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Settings } from '../Settings';
-import { Linter } from './Linter';
+import { Linter, LintError } from './Linter';
 import * as util from './util';
 
 //
@@ -25,8 +25,10 @@ export class RuboCop extends Linter {
 	public get args(): string[] {
 		let args: string[] = [];
 
-		// tslint:disable-next-line no-invalid-template-strings
-		args = ['-s', '${path}', '-f', 'json'];
+		// Don't bother sending ${path}, since it can interfere with linting. We
+		// don't use it in the rubocop output, so removing it is harmless. See:
+		// https://github.com/bbatsov/rubocop/issues/5789
+		args = ['-s', 'file.rb', '-f', 'json'];
 
 		// calculate args
 		if (this.settings.forceExclusion) {
@@ -59,10 +61,7 @@ export class RuboCop extends Linter {
 			return [];
 		}
 		if (error.code !== 1) {
-			console.log("unknown rubocop error");
-			console.log(output.stdout);
-			console.log(output.stderr);
-			throw error;
+			throw new LintError("unknown rubocop error", output);
 		}
 
 		//

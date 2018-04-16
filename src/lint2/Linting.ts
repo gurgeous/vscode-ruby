@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Settings } from '../Settings';
-import { Linter } from './Linter';
+import { Linter, LintError } from './Linter';
 
 import { Fasterer } from './Fasterer';
 import { Reek } from './Reek';
@@ -18,13 +18,17 @@ import { RuboCop } from './RuboCop';
 export class Linting {
 	// complete "ruby" settings
 	private settings: Settings;
+
 	// list of linters (rubocop, fasterer, reek)
 	private linters: Linter[];
+
 	// keep track of which documents are currently being linted
 	private running: Map<vscode.Uri, boolean>;
+
 	// don't lint too often
 	private debouncedLint: (document: vscode.TextDocument) => void;
-	// collection of diagnostics (linting offenses)
+
+	// collection of diagnostics (offenses)
 	private diagnosticsCollection: vscode.DiagnosticCollection;
 
 	public constructor(context: vscode.ExtensionContext) {
@@ -37,13 +41,12 @@ export class Linting {
 		this.running = new Map<vscode.Uri, boolean>();
 		this.debouncedLint = _.debounce(this.lintDocument, this.settings.lintDebounceTime);
 		this.diagnosticsCollection = vscode.languages.createDiagnosticCollection('ruby');
+		context.subscriptions.push(this.diagnosticsCollection);
 
 		// register for vscode events
 		this.register(context);
 		// lint now
 		this.lintAllEditors();
-
-		context.subscriptions.push(this);
 	}
 
 	// register for vscode events
@@ -59,10 +62,6 @@ export class Linting {
 		);
 	}
 
-	public dispose(): void {
-		// REMIND
-	}
-
 	// Walk editors, lint docs.
 	private lintAllEditors(): void {
 		vscode.window.visibleTextEditors.forEach((textEditor: vscode.TextEditor) => {
@@ -72,10 +71,12 @@ export class Linting {
 
 	// Lint a single document.
 	private lintDocument = async (document: vscode.TextDocument): Promise<void> => {
+		// is this ruby?
 		if (!document || document.languageId !== 'ruby') {
 			return;
 		}
 
+		// are we already linting this doc?
 		if (this.running.get(document.uri)) {
 			return;
 		}
@@ -95,7 +96,21 @@ export class Linting {
 			this.diagnosticsCollection.delete(document.uri);
 			const msg: string = `vscode-ruby failed to lint ${document.fileName} '${e}'`;
 			vscode.window.showErrorMessage(msg);
+
+			// log
 			console.error(e);
+			if (e instanceof LintError) {
+				console.log("-- underlying error --");
+				console.log(e.output.error);
+				if (e.output.stdout) {
+					console.log("-- stdout --");
+					console.log(e.output.stdout);
+				}
+				if (e.output.stderr) {
+					console.log("-- stderr --");
+					console.log(e.output.stderr);
+				}
+			}
 		}
 
 		this.running.set(document.uri, false);
