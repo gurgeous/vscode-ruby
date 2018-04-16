@@ -19,15 +19,17 @@ export class Linting {
 	private settings: Settings;
 	private debouncedLint: (document: vscode.TextDocument) => void;
 	private linters: Linter[];
+	private diagnosticsCollection: vscode.DiagnosticCollection;
 
 	public constructor(context: vscode.ExtensionContext) {
 		this.settings = <Settings>vscode.workspace.getConfiguration('ruby');
 		this.debouncedLint = _.debounce(this.lintDocument, this.settings.lintDebounceTime);
 		this.linters = [
-			// new RuboCop(this.settings),
-			// new Fasterer(this.settings),
+			new RuboCop(this.settings),
+			new Fasterer(this.settings),
 			new Reek(this.settings),
 		];
+		this.diagnosticsCollection = vscode.languages.createDiagnosticCollection("ruby");
 
 		// register for vscode events
 		this.register(context);
@@ -58,19 +60,28 @@ export class Linting {
 	}
 
 	// lint a document
-	private lintDocument = (document: vscode.TextDocument): void => {
+	private lintDocument = async (document: vscode.TextDocument): Promise<void> => {
 		if (!document || document.languageId !== 'ruby') {
 			return;
 		}
-		this.linters.forEach((linter: Linter) => {
-			try {
-				linter.run(document)
-			} catch (e) {
-				const msg: string = `vscode-ruby failed to lint ${document.fileName} '${e}'`;
-				vscode.window.showErrorMessage(msg);
-				console.error(msg);
-			}
+
+		// run linters
+		const promises: any[] = this.linters.map((linter: Linter) => {
+			return linter.run(document);
 		});
+
+		// wait for them to complete
+		try {
+			const perLinter: vscode.Diagnostic[][] = await Promise.all(promises);
+			const diagnostics: vscode.Diagnostic[] = [].concat.apply([], perLinter);
+			this.diagnosticsCollection.set(document.uri, diagnostics);
+		} catch (e) {
+			// clear diagnostics
+			this.diagnosticsCollection.delete(document.uri);
+			const msg: string = `vscode-ruby failed to lint ${document.fileName} '${e}'`;
+			vscode.window.showErrorMessage(msg);
+			console.error(e);
+		}
 	};
 
 	//

@@ -30,12 +30,11 @@ const DEFAULTS: LinterSettings = {
 export abstract class Linter {
 	public readonly exe: string;
 	public settings: LinterSettings;
-	private diagnostics: vscode.DiagnosticCollection;
+	private enabled: boolean;
 
 	// ctor
 	public constructor(exe: string, settings: Settings) {
 		this.exe = exe;
-		this.diagnostics = vscode.languages.createDiagnosticCollection(exe);
 		this.reload(settings);
 	}
 
@@ -78,9 +77,15 @@ export abstract class Linter {
 
 		// calculate final settings
 		this.settings = Object.assign({}, ...withoutUndefined);
+
+		this.enabled = settings.lint[this.exe] !== undefined;
 	}
 
-	public async run(document: vscode.TextDocument): Promise<void> {
+	public async run(document: vscode.TextDocument): Promise<vscode.Diagnostic[]> {
+		if (!this.enabled) {
+			return [];
+		}
+
 		//
 		// create context
 		//
@@ -119,15 +124,13 @@ export abstract class Linter {
 		const output: execFile.Output = await execFile.execFile(ea);
 
 		// parse
-		// REMIND: clear this first in case of errors?
 		const diagnostics: vscode.Diagnostic[] = this.parseToDiagnostics(output);
 		diagnostics.forEach((diagnostic: vscode.Diagnostic) => {
 			if (!diagnostic.source) {
 				diagnostic.source = this.exe;
 			}
 		});
-		console.log(diagnostics);
-		this.diagnostics.set(document.uri, diagnostics);
+		return diagnostics;
 	}
 
 	//

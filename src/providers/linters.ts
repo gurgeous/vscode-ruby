@@ -27,7 +27,7 @@ function getGlobalLintConfig() : LintConfig {
 }
 
 export function registerLinters(ctx: ExtensionContext) {
-	new Linting(ctx);
+	new Linting(ctx); return;
 
 	const globalConfig = getGlobalLintConfig();
 	const linters = new LintCollection(globalConfig, vscode.workspace.getConfiguration("ruby").lint, vscode.workspace.rootPath);
