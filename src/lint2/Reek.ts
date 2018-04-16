@@ -42,6 +42,7 @@ export class Reek extends Linter {
 				const diagnostic: vscode.Diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Information);
 				diagnostic.source = `${this.exe}: ${offense.smell_type}`;
 				diagnostics.push(diagnostic);
+
 				return diagnostic;
 			});
 		});

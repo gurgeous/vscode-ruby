@@ -25,6 +25,7 @@ export class Fasterer extends Linter {
 		if (this.settings.rails) {
 			args.unshift('-r');
 		}
+
 		return args;
 	}
 
@@ -76,6 +77,7 @@ export class Fasterer extends Linter {
 				diagnostics.push(diagnostic);
 			});
 		}
+
 		return diagnostics;
 	}
 }

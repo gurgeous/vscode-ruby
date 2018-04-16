@@ -75,6 +75,7 @@ export class RuboCop extends Linter {
 
 		const json: any = JSON.parse(stdout);
 		const offenses: any[] = json.files[0].offenses;
+
 		return offenses.map((o: any): vscode.Diagnostic => {
 			// range. Note that offsets are zero-based
 			const loc: any = o.location;
@@ -89,6 +90,7 @@ export class RuboCop extends Linter {
 
 			const diagnostic: vscode.Diagnostic = new vscode.Diagnostic(range, o.message, severity);
 			diagnostic.source = o.cop_name;
+
 			return diagnostic;
 		});
 	}

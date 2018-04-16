@@ -83,6 +83,7 @@ export abstract class Linter {
 					copy[key] = value;
 				}
 			}
+
 			return <LinterSettings>copy;
 		});
 
@@ -145,6 +146,7 @@ export abstract class Linter {
 					diagnostic.source = this.exe;
 				}
 			});
+
 			return diagnostics;
 		} finally {
 			if (tmpDir) {

@@ -9,10 +9,7 @@
 		"no-relative-imports": false,
 
 		// added by gurgeous
-		"interface-name": false,
-		"newline-before-return": false,
-		"no-any": false,
-		"no-console": false
+		"interface-name": false
 	},
 	"rulesDirectory": []
 }

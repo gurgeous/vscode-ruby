@@ -104,6 +104,8 @@ export class Linting {
 			vscode.window.showErrorMessage(msg);
 
 			// log
+
+			/* tslint:disable:no-console*/
 			console.error(e);
 			if (e instanceof LintError) {
 				console.log("-- underlying error --");
@@ -117,6 +119,7 @@ export class Linting {
 					console.log(e.output.stderr);
 				}
 			}
+			/* tslint:enable:no-console*/
 		}
 
 		this.running.set(document.uri, false);

@@ -68,7 +68,7 @@ export interface Settings {
 	/**
 	 * Run the linter on save (onSave) or on type (onType).
 	 */
-	lintRun: 'onSave' | 'onType';
+	lintRun?: 'onSave' | 'onType';
 
 	/**
 	 * Set individual ruby linters to use
@@ -87,11 +87,7 @@ export interface Settings {
 		/**
 		 * Use RuboCop to lint
 		 */
-		rubocop?:
-			| boolean
-			| {
-					[k: string]: any;
-			  };
+		rubocop?: boolean | { [k: string]: any };
 	};
 
 	/**

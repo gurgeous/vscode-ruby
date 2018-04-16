@@ -46,6 +46,7 @@ export async function isReadable(file: string): Promise<boolean> {
 	} catch (e) {
 		return false;
 	}
+
 	return true;
 }
 
