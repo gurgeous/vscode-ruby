@@ -9,6 +9,9 @@ import { Linter } from './Linter';
 // The Fasterer linter.
 //
 
+const OFFENSE_RE: RegExp = /^(.*) Occurred at lines: ([^.]*)/gm;
+const UNPROCESSABLE_RE: RegExp = /Unprocessable files/;
+
 export class Fasterer extends Linter {
 	public constructor(settings: Settings) {
 		super('fasterer', settings);
@@ -34,13 +37,32 @@ export class Fasterer extends Linter {
 	}
 
 	public parseToDiagnostics(output: execFile.Output): vscode.Diagnostic[] {
+		//
+		// examine error
+		// https://github.com/bbatsov/rubocop/blob/master/manual/basic_usage.md#exit-codes
+		//
+
+		const error: any = output.error;
+		if (error && error.code !== 1) {
+			console.log("unknown fasterer error");
+			console.log(output.stdout);
+			console.log(output.stderr);
+			throw error;
+		}
+
+		// ignore 'Unprocessable files'
+		if (output.stdout.match(UNPROCESSABLE_RE)) {
+			return [ ];
+		}
+
+		//
+		// now collect errors
+		//
+
 		const diagnostics: vscode.Diagnostic[] = [];
-
-		const re: RegExp = /^(.*) Occurred at lines: ([^.]*)/gm;
-
 		// tslint:disable-next-line no-constant-condition
 		while (true) {
-			const match: RegExpMatchArray | null = re.exec(output.stdout);
+			const match: RegExpMatchArray | null = OFFENSE_RE.exec(output.stdout);
 			if (!match) {
 				break;
 			}
@@ -48,17 +70,15 @@ export class Fasterer extends Linter {
 			const numbers: number[] = match[2].split(', ').map((i: string) => parseInt(i, 10));
 			numbers.forEach((lino: number) => {
 				// range. Note that offsets are zero-based
-				const range: vscode.Range = new vscode.Range(lino - 1, 1, lino - 1, 10000);
+				const range: vscode.Range = new vscode.Range(lino - 1, 0, lino - 1, 10000);
 				const diagnostic: vscode.Diagnostic = new vscode.Diagnostic(
 					range,
 					message,
 					vscode.DiagnosticSeverity.Information
 				);
-				diagnostic.source = this.exe;
 				diagnostics.push(diagnostic);
 			});
 		}
-
 		return diagnostics;
 	}
 }

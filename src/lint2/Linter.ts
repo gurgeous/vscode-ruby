@@ -121,6 +121,11 @@ export abstract class Linter {
 		// parse
 		// REMIND: clear this first in case of errors?
 		const diagnostics: vscode.Diagnostic[] = this.parseToDiagnostics(output);
+		diagnostics.forEach((diagnostic: vscode.Diagnostic) => {
+			if (!diagnostic.source) {
+				diagnostic.source = this.exe;
+			}
+		});
 		console.log(diagnostics);
 		this.diagnostics.set(document.uri, diagnostics);
 	}

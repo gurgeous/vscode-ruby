@@ -33,8 +33,6 @@ export function execFile(args: Args): Promise<Output> {
 		);
 
 		// apply stdin if present
-		if (args.stdin) {
-			child.stdin.end(args.stdin);
-		}
+		child.stdin.end(args.stdin || '');
 	});
 }

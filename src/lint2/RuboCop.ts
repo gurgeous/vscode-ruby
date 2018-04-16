@@ -49,25 +49,32 @@ export class RuboCop extends Linter {
 	}
 
 	public parseToDiagnostics(output: execFile.Output): vscode.Diagnostic[] {
-		const error: any = output.error;
-
+		//
+		// examine error
 		// https://github.com/bbatsov/rubocop/blob/master/manual/basic_usage.md#exit-codes
-		if (error && error.code !== 1) {
-			// REMIND: fail loudly
+		//
+
+		const error: any = output.error;
+		if (!error) {
+			return [];
+		}
+		if (error.code !== 1) {
+			console.log("unknown rubocop error");
+			console.log(output.stdout);
+			console.log(output.stderr);
 			throw error;
 		}
+
+		//
+		// now collect errors
+		//
 
 		const stdout: string = output.stdout;
 		if (stdout === '') {
 			return [];
 		}
 
-		// sanity
 		const json: any = JSON.parse(stdout);
-		if (!(json && json.files && json.files[0] && json.files[0].offenses)) {
-			return [];
-		}
-
 		const offenses: any[] = json.files[0].offenses;
 		return offenses.map((o: any): vscode.Diagnostic => {
 			// range. Note that offsets are zero-based

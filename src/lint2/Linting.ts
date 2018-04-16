@@ -8,8 +8,6 @@ import { Fasterer } from './Fasterer';
 import { Reek } from './Reek';
 import { RuboCop } from './RuboCop';
 
-// keep: reek
-
 //
 // Linting support. This class contains a list of external command line linters
 // which are enabled/disabled on demand depending on user settings. Each Linter

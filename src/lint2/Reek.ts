@@ -19,15 +19,28 @@ export class Reek extends Linter {
 	}
 
 	public parseToDiagnostics(output: execFile.Output): vscode.Diagnostic[] {
-		if (!output.stdout) {
-			return [];
+		//
+		// examine error
+		//
+
+		const error: any = output.error;
+		if (error && error.code !== 2) {
+			console.log("unknown reek error");
+			console.log(output.stdout);
+			console.log(output.stderr);
+			throw error;
 		}
+
+		//
+		// now collect errors
+		//
+
 		const json: any = JSON.parse(output.stdout);
 		const diagnostics: vscode.Diagnostic[] = [];
 		json.forEach((offense: any) => {
 			offense.lines.forEach((line: number) => {
 				// range. Note that offsets are zero-based
-				const range: vscode.Range = new vscode.Range(line - 1, 1, line - 1, 10000);
+				const range: vscode.Range = new vscode.Range(line - 1, 0, line - 1, 10000);
 				const message: string = `${offense.context}: ${offense.message}`;
 				const diagnostic: vscode.Diagnostic = new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Information);
 				diagnostic.source = `${this.exe}: ${offense.smell_type}`;
@@ -39,29 +52,6 @@ export class Reek extends Linter {
 		return diagnostics;
 	}
 }
-
-// Reek.prototype.processResult = function(data) {
-// 	if (!data) return [];
-// 	let offenses = JSON.parse(data);
-// 	let messageLines = [];
-// 	offenses.forEach(offense => {
-// 		offense.lines.forEach(line => {
-// 			messageLines.push({
-// 				location: {
-// 					line: line,
-// 					column: 1,
-// 					length: 10000
-// 				},
-// 				message: offense.context + ": " + offense.message,
-// 				cop_name: this.exe + ":" + offense.smell_type,
-// 				severity: "info"
-// 			});
-// 		});
-// 	});
-// 	return messageLines;
-// };
-// const EOL = require("os")
-// 	.EOL;
 
 // Reek.prototype.processError = function(data) {
 // 	//similar to the ruby output, but we get a length
