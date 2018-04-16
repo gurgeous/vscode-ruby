@@ -1,8 +1,8 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Settings } from '../Settings';
-import * as execFile from './execFile';
 import { Linter } from './Linter';
+import * as util from './util';
 
 //
 // The RuboCop linter.
@@ -48,7 +48,7 @@ export class RuboCop extends Linter {
 		return args;
 	}
 
-	public parseToDiagnostics(output: execFile.Output): vscode.Diagnostic[] {
+	public parseToDiagnostics(output: util.ExecFileOutput): vscode.Diagnostic[] {
 		//
 		// examine error
 		// https://github.com/bbatsov/rubocop/blob/master/manual/basic_usage.md#exit-codes

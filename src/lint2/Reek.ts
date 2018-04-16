@@ -2,8 +2,8 @@ import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Settings } from '../Settings';
-import * as execFile from './execFile';
 import { Linter } from './Linter';
+import * as util from './util';
 
 //
 // The Reek linter.
@@ -18,7 +18,7 @@ export class Reek extends Linter {
 		return ['-f', 'json'];
 	}
 
-	public parseToDiagnostics(output: execFile.Output): vscode.Diagnostic[] {
+	public parseToDiagnostics(output: util.ExecFileOutput): vscode.Diagnostic[] {
 		//
 		// examine error
 		//

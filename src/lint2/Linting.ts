@@ -29,7 +29,7 @@ export class Linting {
 			new Fasterer(this.settings),
 			new Reek(this.settings),
 		];
-		this.diagnosticsCollection = vscode.languages.createDiagnosticCollection("ruby");
+		this.diagnosticsCollection = vscode.languages.createDiagnosticCollection('ruby');
 
 		// register for vscode events
 		this.register(context);
@@ -100,7 +100,7 @@ export class Linting {
 	};
 
 	private onDidChangeConfiguration = (): void => {
-		// REMIND: apply new settings, then lint
-		console.log('onDidChangeConfiguration');
+		this.settings = <Settings>vscode.workspace.getConfiguration('ruby');
+		this.linters.forEach((linter: Linter) => linter.reload(this.settings));
 	};
 }

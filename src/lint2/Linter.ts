@@ -2,10 +2,11 @@ import * as fs from 'fs-extra';
 import * as _ from 'lodash';
 import * as os from 'os';
 import * as path from 'path';
+import * as tmp from 'tmp';
 import * as vscode from 'vscode';
 import { Settings } from '../Settings';
 import * as args from './args';
-import * as execFile from './execFile';
+import * as util from './util';
 
 //
 // Abstract superclass for our various linters. Each linter runs on a document
@@ -77,10 +78,10 @@ export abstract class Linter {
 
 		// calculate final settings
 		this.settings = Object.assign({}, ...withoutUndefined);
-
-		this.enabled = settings.lint[this.exe] !== undefined;
+		this.enabled = Boolean(settings.lint[this.exe]);
 	}
 
+	// Run this linter on a document.
 	public async run(document: vscode.TextDocument): Promise<vscode.Diagnostic[]> {
 		if (!this.enabled) {
 			return [];
@@ -97,53 +98,56 @@ export abstract class Linter {
 		};
 
 		//
-		// tmp? adjust context if necessary
+		// tmp? adjust context if necessary. Use a random tmp directory that gets
+		// removed in a finally block, so that our linters can run in parallel
+		// without fear of overlap.
 		//
 
+		let tmpDir: string | undefined;
 		if (this.runInTmpDirectory) {
-			// make dir
-			const tmpDir: string = path.join(os.tmpdir(), 'vscode_ruby_lint');
-			const tmpFile: string = path.join(tmpDir, 'lint.rb');
-
-			// prepare tmp dir
-			await fs.emptyDir(tmpDir);
-			await fs.writeFile(tmpFile, context.data);
-			await this.linkSettings(context.cwd, tmpDir);
-
-			// and now update context
-			context.fileName = path.basename(tmpFile);
-			context.cwd = tmpDir;
+			tmpDir = await tmp.dirSync().name;
 		}
 
-		//
-		// run
-		//
+		try {
+			if (tmpDir) {
+				// prepare tmp dir
+				const tmpFile: string = path.join(tmpDir, 'lint.rb');
+				await fs.writeFile(tmpFile, context.data);
+				await this.linkSettings(context.cwd, tmpDir);
 
-		// get arguments, run
-		const ea: execFile.Args = args.forContext(this, context);
-		const output: execFile.Output = await execFile.execFile(ea);
-
-		// parse
-		const diagnostics: vscode.Diagnostic[] = this.parseToDiagnostics(output);
-		diagnostics.forEach((diagnostic: vscode.Diagnostic) => {
-			if (!diagnostic.source) {
-				diagnostic.source = this.exe;
+				// and now update context
+				context.fileName = path.basename(tmpFile);
+				context.cwd = tmpDir;
 			}
-		});
-		return diagnostics;
+
+			//
+			// run/parse
+			//
+
+			// get arguments, run
+			const ea: util.ExecFileArgs = args.forContext(this, context);
+			const output: util.ExecFileOutput = await util.execFile(ea);
+
+			// parse
+			const diagnostics: vscode.Diagnostic[] = this.parseToDiagnostics(output);
+			diagnostics.forEach((diagnostic: vscode.Diagnostic) => {
+				if (!diagnostic.source) {
+					diagnostic.source = this.exe;
+				}
+			});
+			return diagnostics;
+		} finally {
+			if (tmpDir) {
+				fs.remove(tmpDir);
+			}
+		}
 	}
 
 	//
 	// subclasses should override these
 	//
 
-	public get args(): string[] {
-		return [];
-	}
-
-	public get path(): string {
-		return this.settings.path;
-	}
+	public abstract get args(): string[];
 
 	public get runInTmpDirectory(): boolean {
 		return false;
@@ -155,56 +159,25 @@ export abstract class Linter {
 		return undefined;
 	}
 
-	public abstract parseToDiagnostics(output: execFile.Output): vscode.Diagnostic[];
+	public abstract parseToDiagnostics(output: util.ExecFileOutput): vscode.Diagnostic[];
 
 	//
 	// helpers
 	//
 
-	// is file readable?
-	private async isReadable(file: string): Promise<boolean> {
-		try {
-			await fs.access(file, fs.constants.R_OK);
-		} catch (e) {
-			return false;
-		}
-		return true;
-	}
-
-	// look in dir (and above) for a file
-	private async lookUpward(srcDir: string, file: string): Promise<string | undefined> {
-		let dir: string = srcDir;
-
-		// tslint:disable-next-line no-constant-condition
-		while (true) {
-			const checkFile: string = path.join(dir, file);
-			if (await this.isReadable(checkFile)) {
-				// success!
-				return checkFile;
-			}
-			const parentDir: string = path.dirname(dir);
-			if (parentDir === dir) {
-				// failure
-				return undefined;
-			}
-			dir = parentDir;
-		}
-	}
-
 	// copy settings into tmp dir
 	private async linkSettings(srcDir: string, dstDir: string): Promise<void> {
 		const settingsFile: string | undefined = this.settingsFile;
-		if (!this.settingsFile) {
+		if (!settingsFile) {
 			return;
 		}
 
-		let srcFile: string | undefined;
-
 		// look upward, then try HOME
-		srcFile = await this.lookUpward(srcDir, settingsFile);
+		let srcFile: string | undefined;
+		srcFile = await util.lookUpward(srcDir, settingsFile);
 		if (!srcFile) {
 			const checkFile: string = path.join(process.env.HOME, settingsFile);
-			if (await this.isReadable(checkFile)) {
+			if (await util.isReadable(checkFile)) {
 				srcFile = checkFile;
 			}
 		}

@@ -1,7 +1,7 @@
 import * as cp from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Args } from './execFile';
+import * as util from './util';
 import { Linter } from './Linter';
 
 export interface Context {
@@ -16,12 +16,12 @@ export interface Context {
 // command line.
 //
 
-export function forContext(linter: Linter, context: Context): Args {
+export function forContext(linter: Linter, context: Context): util.ExecFileArgs {
 	//
 	// Finalize args
 	//
 
-	let command: string = linter.path || '';
+	let command: string = linter.settings.path || '';
 	let args: string[] = linter.args.slice();
 	if (command.length === 0 && linter.settings.useBundler) {
 		command = linter.settings.pathToBundler;
