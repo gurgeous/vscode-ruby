@@ -44,12 +44,12 @@ export class Fasterer extends Linter {
 		//
 
 		if (output.error && output.error.code !== 1) {
-			throw new LintError("unknown fasterer error", output);
+			throw new LintError('unknown fasterer error', output);
 		}
 
 		// ignore 'Unprocessable files'
 		if (output.stdout.match(UNPROCESSABLE_RE)) {
-			return [ ];
+			return [];
 		}
 
 		//
