@@ -40,13 +40,13 @@ export class Reek extends Linter {
 		//
 
 		const json: ReekOffense[] = JSON.parse(output.stdout);
-		const diagnostics: vscode.Diagnostic[] = [];
-		json.forEach((offense: ReekOffense) => {
-			offense.lines.forEach((line: number) => {
+		const diagnostics = [];
+		json.forEach(offense => {
+			offense.lines.forEach(line => {
 				// range. Note that offsets are zero-based
-				const range: vscode.Range = new vscode.Range(line - 1, 0, line - 1, 10000);
-				const message: string = `${offense.context}: ${offense.message}`;
-				const diagnostic: vscode.Diagnostic = new vscode.Diagnostic(
+				const range = new vscode.Range(line - 1, 0, line - 1, 10000);
+				const message = `${offense.context}: ${offense.message}`;
+				const diagnostic = new vscode.Diagnostic(
 					range,
 					message,
 					vscode.DiagnosticSeverity.Information
@@ -74,3 +74,4 @@ export class Reek extends Linter {
 //   },
 //   ...
 // ]
+//

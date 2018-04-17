@@ -23,7 +23,7 @@ interface LinterSettings {
 }
 
 // default linter settings
-const DEFAULTS: LinterSettings = {
+const DEFAULTS = {
 	pathToRuby: 'ruby',
 	pathToBundler: 'bundle',
 	useBundler: false,
@@ -52,14 +52,14 @@ export abstract class Linter {
 
 	// Load vscode user settings for this linter. Note that stuff like useBundler
 	// can be set either at the top level or specifically for this linter.
-	public reload(settings: Settings): void {
-		const levels: LinterSettings[] = [];
+	public reload(settings: Settings) {
+		const levels = [];
 
 		// defaults
 		levels.push(DEFAULTS);
 
 		// global settings
-		const globalSettings: LinterSettings = {
+		const globalSettings = {
 			pathToRuby: settings.interpreter.commandPath,
 			pathToBundler: settings.pathToBundler,
 			useBundler: settings.useBundler,
@@ -68,7 +68,7 @@ export abstract class Linter {
 
 		// my settings
 		if (settings.lint) {
-			const mySettings: LinterSettings = settings.lint[this.exe];
+			const mySettings = settings.lint[this.exe];
 			if (typeof mySettings === 'object') {
 				levels.push(mySettings);
 			}
@@ -76,12 +76,12 @@ export abstract class Linter {
 
 		// remove undefined before we call assign, so we don't overwrite earlier
 		// values
-		const withoutUndefined: LinterSettings[] = levels.map((obj: LinterSettings) => {
+		const withoutUndefined = levels.map(obj => {
 			// tslint:disable-next-line no-any
-			const copy: any = {};
+			const copy = {};
 			for (const key of Object.keys(obj)) {
 				// tslint:disable-next-line no-any
-				const value: any = obj[key];
+				const value = obj[key];
 				if (value !== undefined) {
 					copy[key] = value;
 				}
@@ -105,7 +105,7 @@ export abstract class Linter {
 		// create context
 		//
 
-		const context: args.Context = {
+		const context = {
 			fileName: document.fileName,
 			cwd: path.dirname(document.fileName),
 			data: document.getText(),
@@ -117,7 +117,7 @@ export abstract class Linter {
 		// without fear of overlap.
 		//
 
-		let tmpDir: string | undefined;
+		let tmpDir;
 		if (this.runInTmpDirectory) {
 			tmpDir = await tmp.dirSync().name;
 		}
@@ -125,7 +125,7 @@ export abstract class Linter {
 		try {
 			if (tmpDir) {
 				// prepare tmp dir
-				const tmpFile: string = path.join(tmpDir, 'lint.rb');
+				const tmpFile = path.join(tmpDir, 'lint.rb');
 				await fs.writeFile(tmpFile, context.data);
 				await this.linkSettings(context.cwd, tmpDir);
 
@@ -139,11 +139,11 @@ export abstract class Linter {
 			//
 
 			// get arguments, run
-			const ea: util.ExecFileArgs = args.forContext(this, context);
-			const output: util.ExecFileOutput = await util.execFile(ea);
+			const ea = args.forContext(this, context);
+			const output = await util.execFile(ea);
 
 			// parse
-			const diagnostics: vscode.Diagnostic[] = this.parseToDiagnostics(output);
+			const diagnostics = this.parseToDiagnostics(output);
 			diagnostics.forEach((diagnostic: vscode.Diagnostic) => {
 				if (!diagnostic.source) {
 					diagnostic.source = this.exe;
@@ -182,16 +182,16 @@ export abstract class Linter {
 
 	// copy settings into tmp dir
 	private async linkSettings(srcDir: string, dstDir: string): Promise<void> {
-		const settingsFile: string | undefined = this.settingsFile;
+		const settingsFile = this.settingsFile;
 		if (!settingsFile) {
 			return;
 		}
 
 		// look upward, then try HOME
-		let srcFile: string | undefined;
+		let srcFile;
 		srcFile = await util.lookUpward(srcDir, settingsFile);
 		if (!srcFile) {
-			const checkFile: string = path.join(process.env.HOME, settingsFile);
+			const checkFile = path.join(process.env.HOME, settingsFile);
 			if (await util.isReadable(checkFile)) {
 				srcFile = checkFile;
 			}
@@ -201,7 +201,7 @@ export abstract class Linter {
 		}
 
 		// got it! link
-		const dstFile: string = path.join(dstDir, settingsFile);
+		const dstFile = path.join(dstDir, settingsFile);
 		await fs.link(srcFile, dstFile);
 	}
 }

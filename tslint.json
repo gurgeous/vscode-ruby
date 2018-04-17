@@ -9,7 +9,8 @@
 		"no-relative-imports": false,
 
 		// added by gurgeous
-		"interface-name": false
+		"interface-name": false,
+		"typedef": false
 	},
 	"rulesDirectory": []
 }

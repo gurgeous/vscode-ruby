@@ -9,8 +9,8 @@ import * as util from './util';
 // The Fasterer linter.
 //
 
-const OFFENSE_RE: RegExp = /^(.*) Occurred at lines: ([^.]*)/gm;
-const UNPROCESSABLE_RE: RegExp = /Unprocessable files/;
+const OFFENSE_RE = /^(.*) Occurred at lines: ([^.]*)/gm;
+const UNPROCESSABLE_RE = /Unprocessable files/;
 
 export class Fasterer extends Linter {
 	public constructor(settings: Settings) {
@@ -18,7 +18,7 @@ export class Fasterer extends Linter {
 	}
 
 	public get args(): string[] {
-		let args: string[] = [];
+		let args = [];
 
 		// tslint:disable-next-line no-invalid-template-strings
 		args = ['${path}'];
@@ -56,19 +56,19 @@ export class Fasterer extends Linter {
 		// now collect errors
 		//
 
-		const diagnostics: vscode.Diagnostic[] = [];
+		const diagnostics = [];
 		// tslint:disable-next-line no-constant-condition
 		while (true) {
-			const match: RegExpMatchArray | null = OFFENSE_RE.exec(output.stdout);
+			const match = OFFENSE_RE.exec(output.stdout);
 			if (!match) {
 				break;
 			}
-			const message: string = match[1];
-			const numbers: number[] = match[2].split(', ').map((i: string) => parseInt(i, 10));
-			numbers.forEach((lino: number) => {
+			const message = match[1];
+			const numbers = match[2].split(', ').map(i => parseInt(i, 10));
+			numbers.forEach(lino => {
 				// range. Note that offsets are zero-based
-				const range: vscode.Range = new vscode.Range(lino - 1, 0, lino - 1, 10000);
-				const diagnostic: vscode.Diagnostic = new vscode.Diagnostic(
+				const range = new vscode.Range(lino - 1, 0, lino - 1, 10000);
+				const diagnostic = new vscode.Diagnostic(
 					range,
 					message,
 					vscode.DiagnosticSeverity.Information

@@ -21,13 +21,13 @@ export function forContext(linter: Linter, context: Context): util.ExecFileArgs 
 	// Finalize args
 	//
 
-	let command: string = linter.settings.path || '';
-	let args: string[] = linter.args.slice();
+	let command = linter.settings.path || '';
+	let args = linter.args.slice();
 	if (command.length === 0 && linter.settings.useBundler) {
 		command = linter.settings.pathToBundler;
 		args.unshift('exec', linter.exe);
 	} else {
-		const ext: string = process.platform === 'win32' ? '.bat' : '';
+		const ext = process.platform === 'win32' ? '.bat' : '';
 		command = path.join(command, `${linter.exe}${ext}`);
 	}
 
@@ -38,13 +38,12 @@ export function forContext(linter: Linter, context: Context): util.ExecFileArgs 
 	// tslint:disable-next-line no-invalid-template-strings
 	command = command.replace('${workspaceRoot}', vscode.workspace.rootPath);
 	// tslint:disable-next-line no-invalid-template-strings
-	args = args.map((arg: string) => arg.replace('${path}', context.fileName));
+	args = args.map(arg => arg.replace('${path}', context.fileName));
 
 	// options
-	const options: cp.ExecFileOptions = { cwd: context.cwd, env: process.env };
-
+	const options = { cwd: context.cwd, env: process.env };
 	// stdin
-	const stdin: string = context.data;
+	const stdin = context.data;
 
 	return { command, args, options, stdin };
 }

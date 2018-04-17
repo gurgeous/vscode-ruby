@@ -50,7 +50,7 @@ export class Linting {
 	}
 
 	// register for vscode events
-	public register(context: vscode.ExtensionContext): void {
+	public register(context: vscode.ExtensionContext) {
 		context.subscriptions.push(
 			vscode.window.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor)
 		);
@@ -67,7 +67,7 @@ export class Linting {
 	}
 
 	// Walk editors, lint docs.
-	private lintAllEditors(): void {
+	private lintAllEditors() {
 		vscode.window.visibleTextEditors.forEach((textEditor: vscode.TextEditor) => {
 			this.lintDocument(textEditor.document);
 		});
@@ -90,17 +90,16 @@ export class Linting {
 		// there is an edge case if multiple linters are enabled and one of them
 		// throws an error. Promise.all doesn't wait for all promises to complete if
 		// one of them throws an error.
-		const promises: Promise<vscode.Diagnostic[]>[] = this.linters.map((l: Linter) =>
-			l.run(document)
-		);
+		const promises = this.linters.map(l => l.run(document));
+
 		try {
-			const perLinter: vscode.Diagnostic[][] = await Promise.all(promises);
-			const diagnostics: vscode.Diagnostic[] = [].concat.apply([], perLinter);
+			const perLinter = await Promise.all(promises);
+			const diagnostics = [].concat.apply([], perLinter);
 			this.diagnosticsCollection.set(document.uri, diagnostics);
 		} catch (e) {
 			// clear diagnostics
 			this.diagnosticsCollection.delete(document.uri);
-			const msg: string = `vscode-ruby failed to lint ${document.fileName} '${e}'`;
+			const msg = `vscode-ruby failed to lint ${document.fileName} '${e}'`;
 			vscode.window.showErrorMessage(msg);
 
 			// log
@@ -129,32 +128,32 @@ export class Linting {
 	// events from vscode
 	//
 
-	private onDidChangeActiveTextEditor = (textEditor: vscode.TextEditor): void => {
+	private onDidChangeActiveTextEditor = (textEditor: vscode.TextEditor) => {
 		if (!textEditor) {
 			return;
 		}
 		this.lintDocument(textEditor.document);
 	};
 
-	private onDidChangeTextDocument = (changeEvent: vscode.TextDocumentChangeEvent): void => {
+	private onDidChangeTextDocument = (changeEvent: vscode.TextDocumentChangeEvent) => {
 		if (this.settings.lintRun === 'onType') {
 			this.debouncedLint(changeEvent.document);
 		}
 	};
 
-	private onDidSaveTextDocument = (document: vscode.TextDocument): void => {
+	private onDidSaveTextDocument = (document: vscode.TextDocument) => {
 		if (this.settings.lintRun === 'onSave') {
 			this.lintDocument(document);
 		}
 	};
 
-	private onDidCloseTextDocument = (document: vscode.TextDocument): void => {
+	private onDidCloseTextDocument = (document: vscode.TextDocument) => {
 		this.diagnosticsCollection.delete(document.uri);
 	};
 
-	private onDidChangeConfiguration = (): void => {
+	private onDidChangeConfiguration = () => {
 		this.settings = <Settings>vscode.workspace.getConfiguration('ruby');
-		this.linters.forEach((linter: Linter) => linter.reload(this.settings));
+		this.linters.forEach(linter => linter.reload(this.settings));
 		this.lintAllEditors();
 	};
 }

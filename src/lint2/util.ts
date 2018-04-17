@@ -30,8 +30,8 @@ export interface ExecFileOutput {
 
 export function execFile(args: ExecFileArgs): Promise<ExecFileOutput> {
 	return new Promise(
-		(resolve: (value: ExecFileOutput) => void, reject: (reason: Error) => void): void => {
-			const child: cp.ChildProcess = cp.execFile(
+		(resolve: (value: ExecFileOutput) => void, reject: (reason: Error) => void) => {
+			const child = cp.execFile(
 				args.command,
 				args.args,
 				args.options,
@@ -59,16 +59,16 @@ export async function isReadable(file: string): Promise<boolean> {
 
 // Look in dir (and above) for a file
 export async function lookUpward(srcDir: string, file: string): Promise<string | undefined> {
-	let dir: string = srcDir;
+	let dir = srcDir;
 
 	// tslint:disable-next-line no-constant-condition
 	while (true) {
-		const checkFile: string = path.join(dir, file);
+		const checkFile = path.join(dir, file);
 		if (await isReadable(checkFile)) {
 			// success!
 			return checkFile;
 		}
-		const parentDir: string = path.dirname(dir);
+		const parentDir = path.dirname(dir);
 		if (parentDir === dir) {
 			// failure
 			return undefined;
