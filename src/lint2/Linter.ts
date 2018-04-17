@@ -18,6 +18,7 @@ interface LinterSettings {
 	pathToRuby: string;
 	pathToBundler: string;
 	useBundler: boolean;
+	// tslint:disable-next-line no-any
 	[key: string]: any;
 }
 
@@ -76,8 +77,10 @@ export abstract class Linter {
 		// remove undefined before we call assign, so we don't overwrite earlier
 		// values
 		const withoutUndefined: LinterSettings[] = levels.map((obj: LinterSettings) => {
+			// tslint:disable-next-line no-any
 			const copy: any = {};
 			for (const key of Object.keys(obj)) {
+				// tslint:disable-next-line no-any
 				const value: any = obj[key];
 				if (value !== undefined) {
 					copy[key] = value;

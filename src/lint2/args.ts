@@ -1,14 +1,14 @@
 import * as cp from 'child_process';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as util from './util';
 import { Linter } from './Linter';
+import * as util from './util';
 
 export interface Context {
 	fileName: string;
 	cwd: string;
 	data: string;
-};
+}
 
 //
 // Assemble linting command line arguments for a document. Given a Linter and a

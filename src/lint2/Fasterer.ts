@@ -43,8 +43,7 @@ export class Fasterer extends Linter {
 		// https://github.com/bbatsov/rubocop/blob/master/manual/basic_usage.md#exit-codes
 		//
 
-		const error: any = output.error;
-		if (error && error.code !== 1) {
+		if (output.error && output.error.code !== 1) {
 			throw new LintError("unknown fasterer error", output);
 		}
 

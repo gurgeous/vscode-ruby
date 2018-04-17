@@ -185,14 +185,14 @@
           "description": "Time (ms) to wait after keypress before running enabled linters. Ensures linters are only run when typing has finished and not for every keypress"
         },
         "ruby.lintRun": {
-					"type": "string",
-					"enum": [
-						"onSave",
-						"onType"
-					],
-					"default": "onType",
-					"description": "Run the linter on save (onSave) or on type (onType)"
-				},
+          "type": "string",
+          "enum": [
+            "onSave",
+            "onType"
+          ],
+          "default": "onType",
+          "description": "Run the linter on save (onSave) or on type (onType)"
+        },
         "ruby.lint": {
           "type": "object",
           "description": "Set individual ruby linters to use",

@@ -87,6 +87,7 @@ export interface Settings {
 		/**
 		 * Use RuboCop to lint
 		 */
+		// tslint:disable-next-line no-any
 		rubocop?: boolean | { [k: string]: any };
 	};
 
@@ -96,5 +97,6 @@ export interface Settings {
 	 */
 	format?: false | 'rubocop';
 
+	// tslint:disable-next-line no-any
 	[key: string]: any;
 }

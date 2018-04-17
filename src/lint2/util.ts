@@ -3,7 +3,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 
 //
-// Promise wapper around cp.execFile. This is strucuted to take a single Args
+// Promise wapper around cp.execFile. This is structured to take a single Args
 // object as input and returns a single Output object with the results. This
 // makes it a bit easier for callers to use execFile.
 //
@@ -16,27 +16,34 @@ export interface ExecFileArgs {
 	stdin?: string;
 }
 
+// errors from execFile include the exit code
+interface ErrnoException extends Error {
+	code?: number;
+}
+
 // output
 export interface ExecFileOutput {
 	stdout: string;
 	stderr: string;
-	error?: Error;
+	error?: ErrnoException;
 }
 
 export function execFile(args: ExecFileArgs): Promise<ExecFileOutput> {
-	return new Promise((resolve: any, reject: any): void => {
-		const child: cp.ChildProcess = cp.execFile(
-			args.command,
-			args.args,
-			args.options,
-			(error: Error, stdout: string, stderr: string) => {
-				resolve({ stdout, stderr, error });
-			}
-		);
+	return new Promise(
+		(resolve: (value: ExecFileOutput) => void, reject: (reason: Error) => void): void => {
+			const child: cp.ChildProcess = cp.execFile(
+				args.command,
+				args.args,
+				args.options,
+				(error: Error, stdout: string, stderr: string) => {
+					resolve({ stdout, stderr, error });
+				}
+			);
 
-		// apply stdin if present
-		child.stdin.end(args.stdin || '');
-	});
+			// apply stdin if present
+			child.stdin.end(args.stdin || '');
+		}
+	);
 }
 
 // Is this file readable?

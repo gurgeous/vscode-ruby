@@ -17,6 +17,25 @@ const SEVERITIES: { [key: string]: vscode.DiagnosticSeverity } = {
 	fatal: vscode.DiagnosticSeverity.Error,
 };
 
+// RuboCop JSON output. See sample JSON at bottom.
+interface RuboCopOutput {
+	files: {
+		offenses: RuboCopOffense[];
+	}[];
+}
+
+// RuboCop JSON offense
+interface RuboCopOffense {
+	severity: string;
+	message: string;
+	cop_name: string;
+	location: {
+		line: number;
+		column: number;
+		length: number;
+	};
+}
+
 export class RuboCop extends Linter {
 	public constructor(settings: Settings) {
 		super('rubocop', settings);
@@ -56,12 +75,11 @@ export class RuboCop extends Linter {
 		// https://github.com/bbatsov/rubocop/blob/master/manual/basic_usage.md#exit-codes
 		//
 
-		const error: any = output.error;
-		if (!error) {
+		if (!output.error) {
 			return [];
 		}
-		if (error.code !== 1) {
-			throw new LintError("unknown rubocop error", output);
+		if (output.error.code !== 1) {
+			throw new LintError('unknown rubocop error', output);
 		}
 
 		//
@@ -73,15 +91,14 @@ export class RuboCop extends Linter {
 			return [];
 		}
 
-		const json: any = JSON.parse(stdout);
-		const offenses: any[] = json.files[0].offenses;
+		const json: RuboCopOutput = JSON.parse(stdout);
+		const offenses: RuboCopOffense[] = json.files[0].offenses;
 
-		return offenses.map((o: any): vscode.Diagnostic => {
+		return offenses.map((o: RuboCopOffense): vscode.Diagnostic => {
 			// range. Note that offsets are zero-based
-			const loc: any = o.location;
-			const line: number = loc.line - 1;
-			const startCharacter: number = loc.column - 1;
-			const endCharacter: number = startCharacter + loc.length;
+			const line: number = o.location.line - 1;
+			const startCharacter: number = o.location.column - 1;
+			const endCharacter: number = startCharacter + o.location.length;
 			const range: vscode.Range = new vscode.Range(line, startCharacter, line, endCharacter);
 
 			// sev

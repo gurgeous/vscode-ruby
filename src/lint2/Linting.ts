@@ -57,9 +57,7 @@ export class Linting {
 		context.subscriptions.push(
 			vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument)
 		);
-		context.subscriptions.push(
-			vscode.workspace.onDidSaveTextDocument(this.onDidSaveTextDocument)
-		);
+		context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(this.onDidSaveTextDocument));
 		context.subscriptions.push(
 			vscode.workspace.onDidCloseTextDocument(this.onDidCloseTextDocument)
 		);
@@ -92,7 +90,9 @@ export class Linting {
 		// there is an edge case if multiple linters are enabled and one of them
 		// throws an error. Promise.all doesn't wait for all promises to complete if
 		// one of them throws an error.
-		const promises: any[] = this.linters.map((l: Linter) => l.run(document));
+		const promises: Promise<vscode.Diagnostic[]>[] = this.linters.map((l: Linter) =>
+			l.run(document)
+		);
 		try {
 			const perLinter: vscode.Diagnostic[][] = await Promise.all(promises);
 			const diagnostics: vscode.Diagnostic[] = [].concat.apply([], perLinter);
@@ -108,14 +108,14 @@ export class Linting {
 			/* tslint:disable:no-console*/
 			console.error(e);
 			if (e instanceof LintError) {
-				console.log("-- underlying error --");
+				console.log('-- underlying error --');
 				console.log(e.output.error);
 				if (e.output.stdout) {
-					console.log("-- stdout --");
+					console.log('-- stdout --');
 					console.log(e.output.stdout);
 				}
 				if (e.output.stderr) {
-					console.log("-- stderr --");
+					console.log('-- stderr --');
 					console.log(e.output.stderr);
 				}
 			}
