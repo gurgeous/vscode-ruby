@@ -122,7 +122,7 @@ export class Linting {
 		}
 
 		this.running.set(document.uri, false);
-	};
+	}
 
 	//
 	// events from vscode
@@ -133,27 +133,27 @@ export class Linting {
 			return;
 		}
 		this.lintDocument(textEditor.document);
-	};
+	}
 
 	private onDidChangeTextDocument = (changeEvent: vscode.TextDocumentChangeEvent) => {
 		if (this.settings.lintRun === 'onType') {
 			this.debouncedLint(changeEvent.document);
 		}
-	};
+	}
 
 	private onDidSaveTextDocument = (document: vscode.TextDocument) => {
 		if (this.settings.lintRun === 'onSave') {
 			this.lintDocument(document);
 		}
-	};
+	}
 
 	private onDidCloseTextDocument = (document: vscode.TextDocument) => {
 		this.diagnosticsCollection.delete(document.uri);
-	};
+	}
 
 	private onDidChangeConfiguration = () => {
 		this.settings = <Settings>vscode.workspace.getConfiguration('ruby');
 		this.linters.forEach(linter => linter.reload(this.settings));
 		this.lintAllEditors();
-	};
+	}
 }
